@@ -1,0 +1,29 @@
+{
+    "name": "karmia-lambda-jsonrpc",
+    "version": "0.1.0",
+    "description": "Karmia JSON-RPC 2.0 library for AWS Lambda",
+    "homepage": "https://github.com/fujimakishouten/karmia-lambda-jsonrpc",
+    "license": "MIT",
+    "author": "Kazuma Fujimaki <fujimaki-k@fujimakishouten.com>",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fujimakishouten/karmia-lambda-jsonrpc.git"
+    },
+    "scripts": {
+        "cobertura": "./node_modules/.bin/istanbul cover --report cobertura ./node_modules/mocha/bin/_mocha ./test",
+        "coverage": "./node_modules/.bin/istanbul cover --report html ./node_modules/mocha/bin/_mocha ./test",
+        "test": "./node_modules/.bin/mocha ./test"
+    },
+    "dependencies": {
+        "karmia-converter-jsonrpc": ">=0.1.1"
+    },
+    "devDependencies": {
+        "expect.js": ">=0.3.1",
+        "istanbul": ">=0.4.5",
+        "mocha": ">=4.0.1"
+    },
+    "engines": {
+        "node": ">=4.0.0"
+    }
+}
