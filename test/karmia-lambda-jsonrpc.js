@@ -43,11 +43,101 @@ jsonrpc.methods.set('500', function () {
 
 
 describe('karmia-jsonrpc', function () {
+    describe('Parameters', function () {
+        it('Should set parameter', function () {
+            const rpc = karmia_lambda_jsonrpc(),
+                key = 'key',
+                value = 'value';
+            expect(rpc.parameters).to.eql({});
+            rpc.set(key, value);
+            expect(rpc.parameters[key]).to.be(value);
+        });
+
+        it('Should clear parameters', function () {
+            const rpc = karmia_lambda_jsonrpc(),
+                key = 'key',
+                value = 'value';
+            rpc.set(key, value);
+            expect(rpc.parameters[key]).to.be('value');
+            rpc.clear();
+            expect(rpc.parameters).to.eql({});
+        });
+
+        it('Should list parameters', function () {
+            const rpc = karmia_lambda_jsonrpc(),
+                parameters = {
+                    value1: 'value1',
+                    level2: {
+                        value2: 'value2',
+                        level3: {
+                            value3: 'value3'
+                        }
+                    }
+                };
+            rpc.set(parameters);
+
+            expect(rpc.list()).to.eql(parameters);
+            expect(rpc.get()).to.eql(parameters);
+        });
+
+        describe('Should get parameter', function () {
+            it('All parameters', function () {
+                const rpc = karmia_lambda_jsonrpc(),
+                    parameters = {
+                        value1: 'value1',
+                        level2: {
+                            value2: 'value2',
+                            level3: {
+                                value3: 'value3'
+                            }
+                        }
+                    };
+                rpc.set(parameters);
+
+                expect(rpc.get()).to.eql(parameters);
+            });
+
+            it('Level 1', function () {
+                const rpc = karmia_lambda_jsonrpc();
+                rpc.methods.set({
+                    level1: 'level1'
+                });
+                expect(rpc.methods.get('level1')).to.be('level1');
+            });
+
+            it('Level 2', function () {
+                const rpc = karmia_lambda_jsonrpc();
+                rpc.methods.set({
+                    level1: {
+                        level2: 'level2'
+                    }
+                });
+                expect(rpc.methods.methods.level1).to.be.an('object');
+                expect(rpc.methods.get('level1.level2')).to.be('level2');
+            });
+
+            it('Level 3', function () {
+                const rpc = karmia_lambda_jsonrpc();
+                rpc.methods.set({
+                    level1: {
+                        level2: {
+                            level3: 'level3'
+                        }
+                    }
+                });
+                expect(rpc.methods.methods.level1).to.be.an('object');
+                expect(rpc.methods.methods.level1.level2).to.be.an('object');
+                expect(rpc.methods.get('level1.level2.level3')).to.be('level3');
+            });
+        });
+    });
+
     describe('Methods', function () {
         it('Should set method', function () {
             const rpc = karmia_lambda_jsonrpc();
+            expect(rpc.methods.constructor.name).to.be('KarmiaLambdaJSONRPCMethod');
             expect(rpc.methods.methods).to.eql({});
-            rpc.set('test', function () {
+            rpc.methods.set('test', function () {
                 return Promise.resolve({success: true});
             });
             expect(rpc.methods.methods.test).to.be.a('function');
@@ -55,11 +145,11 @@ describe('karmia-jsonrpc', function () {
 
         it('Should clear method', function () {
             const rpc = karmia_lambda_jsonrpc();
-            rpc.set('test', function () {
+            rpc.methods.set('test', function () {
                 return Promise.resolve({success: true});
             });
             expect(rpc.methods.methods.test).to.be.a('function');
-            rpc.clear();
+            rpc.methods.clear();
             expect(rpc.methods.methods).to.eql({});
         });
 
@@ -80,25 +170,25 @@ describe('karmia-jsonrpc', function () {
                         }
                     }
                 };
-            rpc.set(functions);
+            rpc.methods.set(functions);
 
-            expect(rpc.list()).to.eql(functions);
+            expect(rpc.methods.list()).to.eql(functions);
         });
 
         describe('Should get method', function () {
             it('Level 1', function () {
                 const rpc = karmia_lambda_jsonrpc();
-                rpc.set({
+                rpc.methods.set({
                     level1: function () {
                         return Promise.resolve({success: true});
                     }
                 });
-                expect(rpc.get('level1')).to.be.a('function');
+                expect(rpc.methods.get('level1')).to.be.a('function');
             });
 
             it('Level 2', function () {
                 const rpc = karmia_lambda_jsonrpc();
-                rpc.set({
+                rpc.methods.set({
                     level1: {
                         level2: function () {
                             return Promise.resolve({success: true});
@@ -106,12 +196,12 @@ describe('karmia-jsonrpc', function () {
                     }
                 });
                 expect(rpc.methods.methods.level1).to.be.an('object');
-                expect(rpc.get('level1.level2')).to.be.a('function');
+                expect(rpc.methods.get('level1.level2')).to.be.a('function');
             });
 
             it('Level 3', function () {
                 const rpc = karmia_lambda_jsonrpc();
-                rpc.set({
+                rpc.methods.set({
                     level1: {
                         level2: {
                             level3: function () {
@@ -122,7 +212,7 @@ describe('karmia-jsonrpc', function () {
                 });
                 expect(rpc.methods.methods.level1).to.be.an('object');
                 expect(rpc.methods.methods.level1.level2).to.be.an('object');
-                expect(rpc.get('level1.level2.level3')).to.be.a('function');
+                expect(rpc.methods.get('level1.level2.level3')).to.be.a('function');
             });
         });
     });
