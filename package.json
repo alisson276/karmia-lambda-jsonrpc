@@ -1,6 +1,6 @@
 {
     "name": "karmia-lambda-jsonrpc",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "description": "Karmia JSON-RPC 2.0 library for AWS Lambda",
     "homepage": "https://github.com/fujimakishouten/karmia-lambda-jsonrpc",
     "license": "MIT",

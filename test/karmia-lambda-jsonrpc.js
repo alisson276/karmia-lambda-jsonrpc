@@ -43,7 +43,7 @@ jsonrpc.methods.set('500', function () {
 
 
 describe('karmia-jsonrpc', function () {
-    describe('Methds', function () {
+    describe('Methods', function () {
         it('Should set method', function () {
             const rpc = karmia_lambda_jsonrpc();
             expect(rpc.methods.methods).to.eql({});
@@ -61,6 +61,28 @@ describe('karmia-jsonrpc', function () {
             expect(rpc.methods.methods.test).to.be.a('function');
             rpc.clear();
             expect(rpc.methods.methods).to.eql({});
+        });
+
+        it('Should list methods', function () {
+            const rpc = karmia_lambda_jsonrpc(),
+                functions = {
+                    function1: function () {
+                        return Promise.resolve({success: true});
+                    },
+                    level2: {
+                        function2: function () {
+                            return Promise.resolve({success: true});
+                        },
+                        level3: {
+                            function3: function () {
+                                return Promise.resolve({success: true});
+                            }
+                        }
+                    }
+                };
+            rpc.set(functions);
+
+            expect(rpc.list()).to.eql(functions);
         });
 
         describe('Should get method', function () {
