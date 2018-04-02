@@ -1,6 +1,6 @@
 import {KarmiaConverterJSONRPC} from "karmia-converter-jsonrpc";
 
-declare module KarmiaLambdaJSONRPC {
+declare module KarmiaLambda {
     class KarmiaLambdaJSONRPCMethod {
         converter: KarmiaConverterJSONRPC;
         methods: Object;
