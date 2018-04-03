@@ -14,12 +14,12 @@ const event = {
         params: {name: 'world'},
         id: 1
     }
-}
+};
 
 
 // Setup
 const karmia_jsonrpc = require('karmia-lambda-jsonrpc');
-const jsonrpc = karmia_jsonrpc();
+const jsonrpc = new karmia_jsonrpc();
 jsonrpc.set('service', require('./lib/service'));
 jsonrpc.methods.set(require('./lib/method'));
 

@@ -8,7 +8,7 @@
 // Variables
 const expect = require('expect.js'),
     karmia_lambda_jsonrpc = require('../'),
-    jsonrpc = karmia_lambda_jsonrpc(),
+    jsonrpc = new karmia_lambda_jsonrpc(),
     event = {event: 'event'},
     context = {context: 'context'};
 
@@ -45,7 +45,7 @@ jsonrpc.methods.set('500', function () {
 describe('karmia-jsonrpc', function () {
     describe('Parameters', function () {
         it('Should set parameter', function () {
-            const rpc = karmia_lambda_jsonrpc(),
+            const rpc = new karmia_lambda_jsonrpc(),
                 key = 'key',
                 value = 'value';
             expect(rpc.parameters).to.eql({});
@@ -54,7 +54,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should clear parameters', function () {
-            const rpc = karmia_lambda_jsonrpc(),
+            const rpc = new karmia_lambda_jsonrpc(),
                 key = 'key',
                 value = 'value';
             rpc.set(key, value);
@@ -64,7 +64,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should list parameters', function () {
-            const rpc = karmia_lambda_jsonrpc(),
+            const rpc = new karmia_lambda_jsonrpc(),
                 parameters = {
                     value1: 'value1',
                     level2: {
@@ -82,7 +82,7 @@ describe('karmia-jsonrpc', function () {
 
         describe('Should get parameter', function () {
             it('All parameters', function () {
-                const rpc = karmia_lambda_jsonrpc(),
+                const rpc = new karmia_lambda_jsonrpc(),
                     parameters = {
                         value1: 'value1',
                         level2: {
@@ -98,7 +98,7 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 1', function () {
-                const rpc = karmia_lambda_jsonrpc();
+                const rpc = new karmia_lambda_jsonrpc();
                 rpc.methods.set({
                     level1: 'level1'
                 });
@@ -106,7 +106,7 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 2', function () {
-                const rpc = karmia_lambda_jsonrpc();
+                const rpc = new karmia_lambda_jsonrpc();
                 rpc.methods.set({
                     level1: {
                         level2: 'level2'
@@ -117,7 +117,7 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 3', function () {
-                const rpc = karmia_lambda_jsonrpc();
+                const rpc = new karmia_lambda_jsonrpc();
                 rpc.methods.set({
                     level1: {
                         level2: {
@@ -134,7 +134,7 @@ describe('karmia-jsonrpc', function () {
 
     describe('Methods', function () {
         it('Should set method', function () {
-            const rpc = karmia_lambda_jsonrpc();
+            const rpc = new karmia_lambda_jsonrpc();
             expect(rpc.methods.constructor.name).to.be('KarmiaLambdaJSONRPCMethod');
             expect(rpc.methods.methods).to.eql({});
             rpc.methods.set('test', function () {
@@ -144,7 +144,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should clear method', function () {
-            const rpc = karmia_lambda_jsonrpc();
+            const rpc = new karmia_lambda_jsonrpc();
             rpc.methods.set('test', function () {
                 return Promise.resolve({success: true});
             });
@@ -154,7 +154,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should list methods', function () {
-            const rpc = karmia_lambda_jsonrpc(),
+            const rpc = new karmia_lambda_jsonrpc(),
                 functions = {
                     function1: function () {
                         return Promise.resolve({success: true});
@@ -177,7 +177,7 @@ describe('karmia-jsonrpc', function () {
 
         describe('Should get method', function () {
             it('Level 1', function () {
-                const rpc = karmia_lambda_jsonrpc();
+                const rpc = new karmia_lambda_jsonrpc();
                 rpc.methods.set({
                     level1: function () {
                         return Promise.resolve({success: true});
@@ -187,7 +187,7 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 2', function () {
-                const rpc = karmia_lambda_jsonrpc();
+                const rpc = new karmia_lambda_jsonrpc();
                 rpc.methods.set({
                     level1: {
                         level2: function () {
@@ -200,7 +200,7 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 3', function () {
-                const rpc = karmia_lambda_jsonrpc();
+                const rpc = new karmia_lambda_jsonrpc();
                 rpc.methods.set({
                     level1: {
                         level2: {

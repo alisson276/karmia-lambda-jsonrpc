@@ -25,7 +25,7 @@ module.exports = {
                 return collection;
             });
 
-        return service.test.hello({name: parameters.name});
+        return service.test.hello(params);
     }
 }
 

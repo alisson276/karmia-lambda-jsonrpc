@@ -1,6 +1,6 @@
 {
     "name": "karmia-lambda-jsonrpc",
-    "version": "0.3.3",
+    "version": "0.4.0",
     "description": "Karmia JSON-RPC 2.0 library for AWS Lambda",
     "homepage": "https://github.com/fujimakishouten/karmia-lambda-jsonrpc",
     "license": "MIT",
@@ -16,7 +16,7 @@
         "test": "./node_modules/.bin/mocha ./test"
     },
     "dependencies": {
-        "karmia-converter-jsonrpc": ">=0.1.2"
+        "karmia-converter-jsonrpc": "^0.2.0"
     },
     "devDependencies": {
         "expect.js": ">=0.3.1",

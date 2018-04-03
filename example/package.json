@@ -8,7 +8,7 @@
     "main": "index.js",
     "scripts": {},
     "dependencies": {
-        "karmia-lambda-jsonrpc": ">=0.3.0"
+        "karmia-lambda-jsonrpc": "^0.4.0"
     },
     "devDependencies": {},
     "engines": {

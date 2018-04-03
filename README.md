@@ -40,7 +40,7 @@ $input.json('$.body');
 ```javascript
 // Import modules
 const karmia_jsonrpc = require('karmia-lambda-jsonrpc'),
-    jsonrpc = karmia_jsonrpc();
+    jsonrpc = new karmia_jsonrpc();
 
 // Add methods
 jsonrpc.methods.set('method', function () {
