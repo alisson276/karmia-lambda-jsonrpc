@@ -14,7 +14,7 @@ const jsonrpc = new KarmiaLambdaJSONRPC();
 const event = {event: 'event'};
 const context = {context: 'context'};
 
-// Classes
+// Declarations 
 declare class JSONRPCError extends Error {
     code?: number;
     data?: any
