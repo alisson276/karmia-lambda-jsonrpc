@@ -6,18 +6,26 @@
 
 
 // Variables
-const expect = require('expect.js'),
-    karmia_lambda_jsonrpc = require('../'),
-    jsonrpc = new karmia_lambda_jsonrpc(),
-    event = {event: 'event'},
-    context = {context: 'context'};
+import KarmiaLambdaJSONRPC = require("../");
+const expect = require("expect.js");
+
+// Variables
+const jsonrpc = new KarmiaLambdaJSONRPC();
+const event = {event: 'event'};
+const context = {context: 'context'};
+
+// Classes
+class JSONRPCError extends Error {
+    code?: number;
+    data?: any
+}
 
 // RPC
 jsonrpc.methods.set('success', function () {
     return Promise.resolve({success: true});
 });
 jsonrpc.methods.set('error', function () {
-    const error = new Error('TEST_EXCEPTION');
+    const error = new JSONRPCError('TEST_EXCEPTION');
     error.code = 500;
 
     return Promise.reject(error);
@@ -29,13 +37,13 @@ jsonrpc.methods.set('internalServerError', function () {
     return Promise.reject(new Error('Internal Server Error'));
 });
 jsonrpc.methods.set('400', function () {
-    const error = new Error();
+    const error = new JSONRPCError();
     error.code = 400;
 
     return Promise.reject(error);
 });
 jsonrpc.methods.set('500', function () {
-    const error = new Error();
+    const error = new JSONRPCError();
     error.code = 500;
 
     return Promise.reject(error);
@@ -45,7 +53,7 @@ jsonrpc.methods.set('500', function () {
 describe('karmia-jsonrpc', function () {
     describe('Parameters', function () {
         it('Should set parameter', function () {
-            const rpc = new karmia_lambda_jsonrpc(),
+            const rpc = new KarmiaLambdaJSONRPC(),
                 key = 'key',
                 value = 'value';
             expect(rpc.parameters).to.eql({});
@@ -54,7 +62,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should clear parameters', function () {
-            const rpc = new karmia_lambda_jsonrpc(),
+            const rpc = new KarmiaLambdaJSONRPC(),
                 key = 'key',
                 value = 'value';
             rpc.set(key, value);
@@ -64,7 +72,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should list parameters', function () {
-            const rpc = new karmia_lambda_jsonrpc(),
+            const rpc = new KarmiaLambdaJSONRPC(),
                 parameters = {
                     value1: 'value1',
                     level2: {
@@ -82,7 +90,7 @@ describe('karmia-jsonrpc', function () {
 
         describe('Should get parameter', function () {
             it('All parameters', function () {
-                const rpc = new karmia_lambda_jsonrpc(),
+                const rpc = new KarmiaLambdaJSONRPC(),
                     parameters = {
                         value1: 'value1',
                         level2: {
@@ -98,26 +106,26 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 1', function () {
-                const rpc = new karmia_lambda_jsonrpc();
+                const rpc = new KarmiaLambdaJSONRPC();
                 rpc.methods.set({
                     level1: 'level1'
-                });
+                } as {[index: string]: any});
                 expect(rpc.methods.get('level1')).to.be('level1');
             });
 
             it('Level 2', function () {
-                const rpc = new karmia_lambda_jsonrpc();
+                const rpc = new KarmiaLambdaJSONRPC();
                 rpc.methods.set({
                     level1: {
                         level2: 'level2'
                     }
                 });
-                expect(rpc.methods.methods.level1).to.be.an('object');
+                expect(rpc.methods.get('level1')).to.be.an('object');
                 expect(rpc.methods.get('level1.level2')).to.be('level2');
             });
 
             it('Level 3', function () {
-                const rpc = new karmia_lambda_jsonrpc();
+                const rpc = new KarmiaLambdaJSONRPC();
                 rpc.methods.set({
                     level1: {
                         level2: {
@@ -125,8 +133,8 @@ describe('karmia-jsonrpc', function () {
                         }
                     }
                 });
-                expect(rpc.methods.methods.level1).to.be.an('object');
-                expect(rpc.methods.methods.level1.level2).to.be.an('object');
+                expect(rpc.methods.get('level1')).to.be.an('object');
+                expect(rpc.methods.get('level1.level2')).to.be.an('object');
                 expect(rpc.methods.get('level1.level2.level3')).to.be('level3');
             });
         });
@@ -134,7 +142,7 @@ describe('karmia-jsonrpc', function () {
 
     describe('Methods', function () {
         it('Should set method', function () {
-            const rpc = new karmia_lambda_jsonrpc();
+            const rpc = new KarmiaLambdaJSONRPC();
             expect(rpc.methods.constructor.name).to.be('KarmiaLambdaJSONRPCMethod');
             expect(rpc.methods.methods).to.eql({});
             rpc.methods.set('test', function () {
@@ -144,7 +152,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should clear method', function () {
-            const rpc = new karmia_lambda_jsonrpc();
+            const rpc = new KarmiaLambdaJSONRPC();
             rpc.methods.set('test', function () {
                 return Promise.resolve({success: true});
             });
@@ -154,7 +162,7 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Should list methods', function () {
-            const rpc = new karmia_lambda_jsonrpc(),
+            const rpc = new KarmiaLambdaJSONRPC(),
                 functions = {
                     function1: function () {
                         return Promise.resolve({success: true});
@@ -177,7 +185,7 @@ describe('karmia-jsonrpc', function () {
 
         describe('Should get method', function () {
             it('Level 1', function () {
-                const rpc = new karmia_lambda_jsonrpc();
+                const rpc = new KarmiaLambdaJSONRPC();
                 rpc.methods.set({
                     level1: function () {
                         return Promise.resolve({success: true});
@@ -187,7 +195,7 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('Level 2', function () {
-                const rpc = new karmia_lambda_jsonrpc();
+                const rpc = new KarmiaLambdaJSONRPC();
                 rpc.methods.set({
                     level1: {
                         level2: function () {
@@ -195,12 +203,12 @@ describe('karmia-jsonrpc', function () {
                         }
                     }
                 });
-                expect(rpc.methods.methods.level1).to.be.an('object');
+                expect(rpc.methods.get('level1')).to.be.an('object');
                 expect(rpc.methods.get('level1.level2')).to.be.a('function');
             });
 
             it('Level 3', function () {
-                const rpc = new karmia_lambda_jsonrpc();
+                const rpc = new KarmiaLambdaJSONRPC();
                 rpc.methods.set({
                     level1: {
                         level2: {
@@ -210,8 +218,8 @@ describe('karmia-jsonrpc', function () {
                         }
                     }
                 });
-                expect(rpc.methods.methods.level1).to.be.an('object');
-                expect(rpc.methods.methods.level1.level2).to.be.an('object');
+                expect(rpc.methods.get('level1')).to.be.an('object');
+                expect(rpc.methods.get('level1.level2')).to.be.an('object');
                 expect(rpc.methods.get('level1.level2.level3')).to.be.a('function');
             });
         });
@@ -221,7 +229,7 @@ describe('karmia-jsonrpc', function () {
         describe('RPC request', function () {
             it('success', function (done) {
                 const data = {jsonrpc: '2.0', method: 'success', id: 'success'};
-                jsonrpc.call(event, context, data).then((result) => {
+                jsonrpc.call(event, context, data).then((result: {[index: string]: any}) => {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.result).to.eql({success: true});
@@ -233,7 +241,7 @@ describe('karmia-jsonrpc', function () {
 
             it('fail', function (done) {
                 const data = {jsonrpc: '2.0', method: 'error', id: 'error'};
-                jsonrpc.call(event, context, data).then(function (result) {
+                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.error.code).to.eql(500);
@@ -244,9 +252,9 @@ describe('karmia-jsonrpc', function () {
                 });
             });
 
-            it('ID is null', function (done) {
-                const data = {jsonrpc: '2.0', method: 'success', id: null};
-                jsonrpc.call(event, context, data).then(function (result) {
+            it('ID is empty', function (done) {
+                const data = {jsonrpc: '2.0', method: 'success', id: ''};
+                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.result).to.eql({success: true});
@@ -260,7 +268,7 @@ describe('karmia-jsonrpc', function () {
         describe('Notification request', function () {
             it('success', function (done) {
                 const data = {jsonrpc: '2.0', method: 'success'};
-                jsonrpc.call(event, context, data).then(function (result) {
+                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(204);
                     expect(result.body).to.be(null);
 
@@ -270,7 +278,7 @@ describe('karmia-jsonrpc', function () {
 
             it('fail', function (done) {
                 const data = {jsonrpc: '2.0', method: 'error'};
-                jsonrpc.call(event, context, data).then(function (result) {
+                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(204);
                     expect(result.body).to.be(null);
 
@@ -284,9 +292,9 @@ describe('karmia-jsonrpc', function () {
                 {jsonrpc: '2.0', method: 'success', id: 'success'},
                 {jsonrpc: '2.0', method: 'error', id: 'error'}
             ];
-            jsonrpc.call(event, context, data).then(function (result) {
+            jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}): void {
                 expect(result.status).to.be(200);
-                result.body.forEach(function (value, index) {
+                result.body.forEach(function (value: any, index: number) {
                     expect(result.body[index].jsonrpc).to.be('2.0');
                     expect(result.body[index].id).to.be(data[index].id);
                 });
@@ -303,7 +311,7 @@ describe('karmia-jsonrpc', function () {
             describe('Should convert error', function () {
                 it('Version not specified', function (done) {
                     const data = {method: 'error', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result) {
+                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32600);
                         expect(result.body.error.message).to.be('Invalid request');
@@ -315,7 +323,7 @@ describe('karmia-jsonrpc', function () {
 
                 it('Method not specified', function (done) {
                     const data = {jsonrpc: '2.0', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result) {
+                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32600);
                         expect(result.body.error.message).to.be('Invalid request');
@@ -327,7 +335,7 @@ describe('karmia-jsonrpc', function () {
 
                 it('Method not found', function (done) {
                     const data = {jsonrpc: '2.0', method: 'not_found', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result) {
+                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32601);
                         expect(result.body.error.message).to.be('Method not found');
@@ -339,7 +347,7 @@ describe('karmia-jsonrpc', function () {
 
                 it('Invalid params', function (done) {
                     const data = {jsonrpc: '2.0', method: 'badRequest', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result) {
+                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32602);
                         expect(result.body.error.message).to.be('Invalid params');
@@ -351,7 +359,7 @@ describe('karmia-jsonrpc', function () {
 
                 it('Internal error', function (done) {
                     const data = {jsonrpc: '2.0', method: 'internalServerError', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result) {
+                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32603);
                         expect(result.body.error.message).to.be('Internal error');

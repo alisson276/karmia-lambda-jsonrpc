@@ -5,8 +5,32 @@
 
 
 
-// Variables
-const karmia_converter_jsonrpc = require('karmia-converter-jsonrpc');
+// Import modules
+import KarmiaConverterJSONRPC = require("karmia-converter-jsonrpc");
+import KarmiaLambdaJSONRPC = require("../");
+
+
+// Declarations
+declare interface Methods {
+    [index: string]: Function|{[index: string]: any};
+}
+
+declare interface Parameters {
+    [index: string]: any;
+}
+
+declare interface JSONRPCRequest {
+    jsonrpc?: string;
+    method?: string;
+    params?: any;
+    id: any;
+}
+
+declare class JSONRPCError extends Error {
+    code?: number;
+    data?: any;
+}
+
 
 
 /**
@@ -16,17 +40,23 @@ const karmia_converter_jsonrpc = require('karmia-converter-jsonrpc');
  */
 class KarmiaLambdaJSONRPCMethod {
     /**
+     * Properties
+     */
+    public converter: KarmiaConverterJSONRPC;
+    public methods: {[index: string]: Function|object};
+
+
+    /**
      * Constructor
      *
      * @constructs KarmiaLambdaJSONRPC
      * @returns {Object}
      */
-    constructor(options) {
-        const self = this;
-        self.converter = new karmia_converter_jsonrpc();
-        self.methods = {};
+    constructor(options?: Methods) {
+        this.converter = new KarmiaConverterJSONRPC();
+        this.methods = {};
 
-        return self.set(options || {});
+        return this.set(options || {});
     }
 
     /**
@@ -36,11 +66,11 @@ class KarmiaLambdaJSONRPCMethod {
      * @param   {Function|Object} value
      * @returns {Object}
      */
-    set(key, value) {
+    set(key: Methods|string, value?: any): KarmiaLambdaJSONRPCMethod {
         const self = this;
 
-        let methods = {};
-        if (key instanceof Object) {
+        let methods = {} as {[index: string]: any};
+        if ('object' === typeof key) {
             methods = Object.assign(methods, key);
         } else {
             methods[key] = value;
@@ -56,7 +86,7 @@ class KarmiaLambdaJSONRPCMethod {
      *
      * @returns {Object}
      */
-    clear() {
+    clear(): KarmiaLambdaJSONRPCMethod {
         const self = this;
         self.methods = {};
 
@@ -66,22 +96,23 @@ class KarmiaLambdaJSONRPCMethod {
     /**
      * Get method
      *
-     * @param   {string} path
+     * @param   {string} [path]
      * @returns {Function}
      */
-    get(path) {
+    get(path?: string): Function|Methods|undefined {
         const self = this;
-
-        return (function method (object, path) {
+        function method (object: Methods, path?: string): Function|Methods|undefined {
             path = path || '';
             const properties = path.split('.'),
-                result = object[properties[0]];
-            if (result instanceof Object) {
+                result = object[properties[0]] as Methods;
+            if ('object' === typeof result) {
                 return (1 < properties.length) ? method(result, path.substring(path.indexOf('.') + 1)) : result;
             }
 
             return (1 < properties.length) ? undefined : result;
-        })(self.methods, path);
+        }
+
+        return method(self.methods, path);
     }
 
     /**
@@ -89,7 +120,7 @@ class KarmiaLambdaJSONRPCMethod {
      *
      * @returns {Object}
      */
-    list() {
+    list(): Methods {
         const self = this;
 
         return self.methods || {};
@@ -103,13 +134,13 @@ class KarmiaLambdaJSONRPCMethod {
      * @param {Array|Object} body
      * @param {Object} parameters
      */
-    call(event, context, body, parameters) {
+    call(this: KarmiaLambdaJSONRPC, event: Parameters, context: Parameters, body: Array<Parameters>|Parameters, parameters: Parameters) {
         const self = this,
             batch = Array.isArray(body),
             requests = (batch) ? body : [body],
-            parallels = requests.reduce((collection, request) => {
+            parallels = requests.reduce((collection: Parameters, request: JSONRPCRequest) => {
                 if (!request.method || '2.0' !== request.jsonrpc) {
-                    const error = new Error('Invalid request');
+                    const error = new Error('Invalid request') as JSONRPCError;
                     error.code = -32600;
 
                     collection.push(Promise.resolve(error));
@@ -119,9 +150,9 @@ class KarmiaLambdaJSONRPCMethod {
 
                 const method = request.method || '',
                     params = Object.assign({}, parameters || {}, request.params || {}),
-                    func = self.methods.get(method);
+                    func = self.methods.get(method) as Function;
                 if (!func) {
-                    const error = new Error('Method not found');
+                    const error = new Error('Method not found') as JSONRPCError;
                     error.code = -32601;
 
                     collection.push(Promise.resolve(error));
@@ -129,7 +160,7 @@ class KarmiaLambdaJSONRPCMethod {
                     return collection;
                 }
 
-                collection.push(func.call(self, event, context, Object.assign({params: params}, params)).catch((error) => {
+                collection.push(func.call(self, event, context, Object.assign({params: params}, params)).catch((error: Error) => {
                     return Promise.resolve(error);
                 }));
 
@@ -137,7 +168,7 @@ class KarmiaLambdaJSONRPCMethod {
             }, []);
 
         return Promise.all(parallels).then((result) => {
-            return self.methods.converter.convert(body, (batch) ? result : result[0]);
+            return self.converter.convert(body, (batch) ? result : result[0]);
         }).then((result) => {
             return {
                 status: (null === result) ? 204 : 200,
@@ -149,7 +180,7 @@ class KarmiaLambdaJSONRPCMethod {
 
 
 // Export modules
-module.exports = KarmiaLambdaJSONRPCMethod;
+export = KarmiaLambdaJSONRPCMethod;
 
 
 
