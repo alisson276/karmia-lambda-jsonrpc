@@ -15,7 +15,7 @@ const event = {event: 'event'};
 const context = {context: 'context'};
 
 // Classes
-class JSONRPCError extends Error {
+declare class JSONRPCError extends Error {
     code?: number;
     data?: any
 }
@@ -25,7 +25,7 @@ jsonrpc.methods.set('success', function () {
     return Promise.resolve({success: true});
 });
 jsonrpc.methods.set('error', function () {
-    const error = new JSONRPCError('TEST_EXCEPTION');
+    const error = new Error('TEST_EXCEPTION') as JSONRPCError;
     error.code = 500;
 
     return Promise.reject(error);
@@ -37,13 +37,13 @@ jsonrpc.methods.set('internalServerError', function () {
     return Promise.reject(new Error('Internal Server Error'));
 });
 jsonrpc.methods.set('400', function () {
-    const error = new JSONRPCError();
+    const error = new Error() as JSONRPCError;
     error.code = 400;
 
     return Promise.reject(error);
 });
 jsonrpc.methods.set('500', function () {
-    const error = new JSONRPCError();
+    const error = new Error() as JSONRPCError;
     error.code = 500;
 
     return Promise.reject(error);
