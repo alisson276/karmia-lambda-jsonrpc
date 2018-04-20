@@ -14,7 +14,7 @@ const jsonrpc = new KarmiaLambdaJSONRPC();
 const event = {event: 'event'};
 const context = {context: 'context'};
 
-// Declarations 
+// Declarations
 declare class JSONRPCError extends Error {
     code?: number;
     data?: any
@@ -228,37 +228,84 @@ describe('karmia-jsonrpc', function () {
     describe('RPC', function () {
         describe('RPC request', function () {
             it('success', function (done) {
-                const data = {jsonrpc: '2.0', method: 'success', id: 'success'};
-                jsonrpc.call(event, context, data).then((result: {[index: string]: any}) => {
+                const data = Object.assign({
+                    body: {
+                        jsonrpc: '2.0',
+                        method: 'success',
+                        id: 'success'
+                    }
+                }, event);
+
+                jsonrpc.call(data, context).then((result: {[index: string]: any}) => {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.result).to.eql({success: true});
-                    expect(result.body.id).to.be(data.id);
+                    expect(result.body.id).to.be(data.body.id);
 
                     done();
                 });
             });
 
             it('fail', function (done) {
-                const data = {jsonrpc: '2.0', method: 'error', id: 'error'};
-                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                const data = Object.assign({
+                    body: {
+                        jsonrpc: '2.0',
+                        method: 'error',
+                        id: 'error'
+                    }
+                }, event);
+
+                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.error.code).to.eql(500);
                     expect(result.body.error.message).to.eql('TEST_EXCEPTION');
-                    expect(result.body.id).to.be(data.id);
+                    expect(result.body.id).to.be(data.body.id);
 
                     done();
                 });
             });
 
-            it('ID is empty', function (done) {
-                const data = {jsonrpc: '2.0', method: 'success', id: ''};
-                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+            it('body specified', function (done) {
+                const data = Object.assign({
+                        body: {
+                            jsonrpc: '2.0',
+                            method: 'error',
+                            id: 'error'
+                        }
+                    }, event),
+                    body = {
+                        jsonrpc: '2.0',
+                        method: 'success',
+                        id: 'success'
+                    };
+
+                jsonrpc.call(data, context, body).then((result: {[index: string]: any}) => {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.result).to.eql({success: true});
-                    expect(result.body.id).to.be(data.id);
+                    expect(result.body.id).to.be(body.id);
+
+                    done();
+                }).catch((error: Error) => {
+                    console.log(error);
+                    process.exit();
+                });
+            });
+
+            it('ID is empty', function (done) {
+                const data = Object.assign({
+                    body: {
+                        jsonrpc: '2.0',
+                        method: 'success',
+                        id: ''
+                    }
+                }, event);
+                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
+                    expect(result.status).to.be(200);
+                    expect(result.body.jsonrpc).to.be('2.0');
+                    expect(result.body.result).to.eql({success: true});
+                    expect(result.body.id).to.be(data.body.id);
 
                     done();
                 });
@@ -267,8 +314,14 @@ describe('karmia-jsonrpc', function () {
 
         describe('Notification request', function () {
             it('success', function (done) {
-                const data = {jsonrpc: '2.0', method: 'success'};
-                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                const data = Object.assign({
+                    body: {
+                        jsonrpc: '2.0',
+                        method: 'success'
+                    }
+                }, event);
+
+                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(204);
                     expect(result.body).to.be(null);
 
@@ -277,8 +330,14 @@ describe('karmia-jsonrpc', function () {
             });
 
             it('fail', function (done) {
-                const data = {jsonrpc: '2.0', method: 'error'};
-                jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                const data = Object.assign({
+                    body: {
+                        jsonrpc: '2.0',
+                        method: 'error'
+                    }
+                }, event);
+
+                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(204);
                     expect(result.body).to.be(null);
 
@@ -288,15 +347,18 @@ describe('karmia-jsonrpc', function () {
         });
 
         it('Batch request', function (done) {
-            const data = [
-                {jsonrpc: '2.0', method: 'success', id: 'success'},
-                {jsonrpc: '2.0', method: 'error', id: 'error'}
-            ];
-            jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}): void {
+            const data = Object.assign({
+                body: [
+                    {jsonrpc: '2.0', method: 'success', id: 'success'},
+                    {jsonrpc: '2.0', method: 'error', id: 'error'}
+                ]
+            }, event);
+
+            jsonrpc.call(data, context).then(function (result: {[index: string]: any}): void {
                 expect(result.status).to.be(200);
                 result.body.forEach(function (value: any, index: number) {
                     expect(result.body[index].jsonrpc).to.be('2.0');
-                    expect(result.body[index].id).to.be(data[index].id);
+                    expect(result.body[index].id).to.be(data.body[index].id);
                 });
 
                 expect(result.body[0].result).to.eql({success: true});

@@ -27,7 +27,7 @@ jsonrpc.methods.set(require('./lib/method'));
 // Test execution
 (async () => {
     try {
-        const result = await jsonrpc.call(event, context, event.body);
+        const result = await jsonrpc.call(event, context);
         console.log(result); // Hello, world.
     } catch (error) {
         console.error(error);

@@ -9,6 +9,9 @@ npm install karmia-lambda-jsonrpc
 ```
 
 ## Example
+
+Also see example directory.
+
 ### API Gateway / Lambda
 #### Request mapping template
 ```
@@ -58,7 +61,9 @@ jsonrpc.methods.set({
 // Export handler
 exports.handler = async (event, context) => {
     try {
-        return jsonrpc.call(event, context, event.body);
+        return jsonrpc.call(event, context);
+        // You can specify request body instead of to use event.body
+        // return jsonrpc.call(event, context, specified_body);
     } catch (error) {
         return Promise.reject({
             jsonrpc: '2.0',
