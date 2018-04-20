@@ -130,11 +130,13 @@ class KarmiaLambdaJSONRPCMethod {
      * Call method
      *
      * @param {Object} event
-     * @param {Object} context
-     * @param {Array|Object} body
-     * @param {Object} parameters
+     * @param {Object} [context]
+     * @param {Array|Object} [body]
+     * @param {Object} [parameters]
      */
-    call(this: KarmiaLambdaJSONRPC, event: Parameters, context: Parameters, body: Array<Parameters>|Parameters, parameters: Parameters) {
+    call(this: KarmiaLambdaJSONRPC, event: Parameters, context?: Parameters, body?: Array<Parameters>|Parameters, parameters?: Parameters) {
+        body = body || event.body;
+
         const self = this,
             batch = Array.isArray(body),
             requests = (batch) ? body : [body],

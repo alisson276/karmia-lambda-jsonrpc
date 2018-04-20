@@ -134,9 +134,8 @@ class KarmiaLambdaJSONRPC extends events.EventEmitter {
      * @param {Array|Object} body
      * @returns {*}
      */
-    call(event: Parameters, context: Parameters, body?: Parameters): any {
+    call(event: Parameters, context?: Parameters, body?: Parameters): any {
         const self = this;
-        body = body || event.body;
 
         return self.methods.call.call(self, event, context, body, self.parameters);
     }
