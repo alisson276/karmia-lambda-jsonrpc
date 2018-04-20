@@ -59,9 +59,9 @@ jsonrpc.methods.set({
 */
 
 // Export handler
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
     try {
-        return jsonrpc.call(event, context);
+        return jsonrpc.call(event);
         // You can specify request body instead of to use event.body
         // return jsonrpc.call(event, context, specified_body);
     } catch (error) {

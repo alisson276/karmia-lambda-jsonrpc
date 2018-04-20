@@ -12,7 +12,6 @@ const expect = require("expect.js");
 // Variables
 const jsonrpc = new KarmiaLambdaJSONRPC();
 const event = {event: 'event'};
-const context = {context: 'context'};
 
 // Declarations
 declare class JSONRPCError extends Error {
@@ -21,28 +20,31 @@ declare class JSONRPCError extends Error {
 }
 
 // RPC
-jsonrpc.methods.set('success', function () {
+jsonrpc.methods.set('success', () => {
     return Promise.resolve({success: true});
 });
-jsonrpc.methods.set('error', function () {
+jsonrpc.methods.set('error', () => {
     const error = new Error('TEST_EXCEPTION') as JSONRPCError;
     error.code = 500;
 
     return Promise.reject(error);
 });
-jsonrpc.methods.set('badRequest', function () {
+jsonrpc.methods.set('context', (event: object, context: object) => {
+    return Promise.resolve(context);
+});
+jsonrpc.methods.set('badRequest', () => {
     return Promise.reject(new Error('Bad Request'));
 });
-jsonrpc.methods.set('internalServerError', function () {
+jsonrpc.methods.set('internalServerError', () => {
     return Promise.reject(new Error('Internal Server Error'));
 });
-jsonrpc.methods.set('400', function () {
+jsonrpc.methods.set('400', () => {
     const error = new Error() as JSONRPCError;
     error.code = 400;
 
     return Promise.reject(error);
 });
-jsonrpc.methods.set('500', function () {
+jsonrpc.methods.set('500', () => {
     const error = new Error() as JSONRPCError;
     error.code = 500;
 
@@ -236,7 +238,7 @@ describe('karmia-jsonrpc', function () {
                     }
                 }, event);
 
-                jsonrpc.call(data, context).then((result: {[index: string]: any}) => {
+                jsonrpc.call(data).then((result: {[index: string]: any}) => {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.result).to.eql({success: true});
@@ -255,11 +257,31 @@ describe('karmia-jsonrpc', function () {
                     }
                 }, event);
 
-                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
+                jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.error.code).to.eql(500);
                     expect(result.body.error.message).to.eql('TEST_EXCEPTION');
+                    expect(result.body.id).to.be(data.body.id);
+
+                    done();
+                });
+            });
+
+            it('context specified', function (done) {
+                const context = {context: 'context'},
+                    data = Object.assign({
+                        body: {
+                            jsonrpc: '2.0',
+                            method: 'context',
+                            id: 'context'
+                        }
+                    }, event);
+
+                jsonrpc.call(data, context).then((result: {[index: string]: any}) => {
+                    expect(result.status).to.be(200);
+                    expect(result.body.jsonrpc).to.be('2.0');
+                    expect(result.body.result).to.eql(context);
                     expect(result.body.id).to.be(data.body.id);
 
                     done();
@@ -301,7 +323,7 @@ describe('karmia-jsonrpc', function () {
                         id: ''
                     }
                 }, event);
-                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
+                jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(200);
                     expect(result.body.jsonrpc).to.be('2.0');
                     expect(result.body.result).to.eql({success: true});
@@ -321,7 +343,7 @@ describe('karmia-jsonrpc', function () {
                     }
                 }, event);
 
-                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
+                jsonrpc.call(data,).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(204);
                     expect(result.body).to.be(null);
 
@@ -337,7 +359,7 @@ describe('karmia-jsonrpc', function () {
                     }
                 }, event);
 
-                jsonrpc.call(data, context).then(function (result: {[index: string]: any}) {
+                jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                     expect(result.status).to.be(204);
                     expect(result.body).to.be(null);
 
@@ -354,7 +376,7 @@ describe('karmia-jsonrpc', function () {
                 ]
             }, event);
 
-            jsonrpc.call(data, context).then(function (result: {[index: string]: any}): void {
+            jsonrpc.call(data).then(function (result: {[index: string]: any}): void {
                 expect(result.status).to.be(200);
                 result.body.forEach(function (value: any, index: number) {
                     expect(result.body[index].jsonrpc).to.be('2.0');
@@ -372,60 +394,93 @@ describe('karmia-jsonrpc', function () {
         describe('Error converter', function () {
             describe('Should convert error', function () {
                 it('Version not specified', function (done) {
-                    const data = {method: 'error', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                    const data = Object.assign({
+                        body: {
+                            method: 'error',
+                            id: 'error'
+                        }
+                    }, event);
+
+                    jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32600);
                         expect(result.body.error.message).to.be('Invalid request');
-                        expect(result.body.id).to.be(data.id);
+                        expect(result.body.id).to.be(data.body.id);
 
                         done();
                     });
                 });
 
                 it('Method not specified', function (done) {
-                    const data = {jsonrpc: '2.0', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                    const data = Object.assign({
+                        body: {
+                            jsonrpc: '2.0',
+                            id: 'error'
+                        }
+                    }, event);
+
+                    jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32600);
                         expect(result.body.error.message).to.be('Invalid request');
-                        expect(result.body.id).to.be(data.id);
+                        expect(result.body.id).to.be(data.body.id);
 
                         done();
                     });
                 });
 
                 it('Method not found', function (done) {
-                    const data = {jsonrpc: '2.0', method: 'not_found', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                    const data = Object.assign({
+                        body: {
+                            jsonrpc: '2.0',
+                            method: 'not_found',
+                            id: 'error'
+                        }
+                    }, event);
+
+                    jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32601);
                         expect(result.body.error.message).to.be('Method not found');
-                        expect(result.body.id).to.be(data.id);
+                        expect(result.body.id).to.be(data.body.id);
 
                         done();
                     });
                 });
 
                 it('Invalid params', function (done) {
-                    const data = {jsonrpc: '2.0', method: 'badRequest', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                    const data = Object.assign({
+                        body: {
+                            jsonrpc: '2.0',
+                            method: 'badRequest',
+                            id: 'error'
+                        }
+                    }, event);
+
+                    jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32602);
                         expect(result.body.error.message).to.be('Invalid params');
-                        expect(result.body.id).to.be(data.id);
+                        expect(result.body.id).to.be(data.body.id);
 
                         done();
                     });
                 });
 
                 it('Internal error', function (done) {
-                    const data = {jsonrpc: '2.0', method: 'internalServerError', id: 'error'};
-                    jsonrpc.call(event, context, data).then(function (result: {[index: string]: any}) {
+                    const data = Object.assign({
+                        body: {
+                            jsonrpc: '2.0',
+                            method: 'internalServerError',
+                            id: 'error'
+                        }
+                    }, event);
+
+                    jsonrpc.call(data).then(function (result: {[index: string]: any}) {
                         expect(result.status).to.be(200);
                         expect(result.body.error.code).to.be(-32603);
                         expect(result.body.error.message).to.be('Internal error');
-                        expect(result.body.id).to.be(data.id);
+                        expect(result.body.id).to.be(data.body.id);
 
                         done();
                     });
