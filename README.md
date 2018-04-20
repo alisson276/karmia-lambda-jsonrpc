@@ -1,6 +1,6 @@
 # karmia-jsonrpc
 
-Karmia JSON-RPC 2.0 library for AWS Lambda
+Karmia JSON-RPC 2.0 module for AWS Lambda.
 
 ## Installation
 
@@ -36,42 +36,39 @@ npm install karmia-lambda-jsonrpc
 $input.json('$.body');
 ```
 
-#### Sample function
+#### Example lambda function
 ```javascript
 // Import modules
 const karmia_jsonrpc = require('karmia-lambda-jsonrpc'),
     jsonrpc = new karmia_jsonrpc();
 
 // Add methods
-jsonrpc.methods.set('method', function () {
+jsonrpc.methods.set('method', (event, context, params) => {
     return Promise.resolve({success: true});
 });
 
 /*
 // Add multiple method
 jsonrpc.methods.set({
-    method1: () => {},
-    method2: () => {}
+    method1: (event, context, parameters) => {},
+    method2: (event, context, parameters) => {}
 });
 */
 
 // Export handler
-exports.handler = (event, context, callback) => {
-    jsonrpc.call(event, context, event.body).then((result) => {
-        callback(null, result);
-    }).catch((error) => {
-        const result = {
+exports.handler = async (event, context) => {
+    try {
+        return jsonrpc.call(event, context, event.body);
+    } catch (error) {
+        return Promise.reject({
             jsonrpc: '2.0',
-            error: {
-                code: -32603,
-                message: "Internal error",
-                data: error
-            },
-            id: event.body.id
-        };
-
-        callback(JSON.stringify(result));
-    });
+                error: {
+                    code: -32603,
+                    message: "Internal error",
+                    data: error
+                },
+                id: event.body.id
+        });
+    }
 };
 ```
-
